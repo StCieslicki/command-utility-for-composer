@@ -3,6 +3,7 @@
     "type": "project",
     "version": "1.0.0",
     "license": "GNU",
+    "bin": ["utility"],
     "authors": [
         {
             "name": "Staszek Cieslicki",
