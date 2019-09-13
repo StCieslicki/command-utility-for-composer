@@ -1,0 +1,15 @@
+{
+    "name": "metano/command-utility-for-composer",
+    "type": "project",
+    "version": "1.0.0",
+    "license": "GNU",
+    "authors": [
+        {
+            "name": "Staszek Cieslicki",
+            "email": "staszek@metano.pl"
+        }
+    ],
+    "require": {
+        "symfony/console": "^4.3"
+    }
+}
