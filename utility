@@ -124,6 +124,41 @@ $config = json_decode(file_get_contents(__DIR__ . '/composer.json'));
     })
 
     ->getApplication()
+    ->register('update-compose-file')
+    ->setDescription('Update Compose file for package')
+    ->setCode(function (InputInterface $input, OutputInterface $output) {
+
+        $dir = getcwd();
+        $configFile = $dir . '/composer.json';
+        $destinationFile = $dir . '/composer-package.json';
+
+        $config = json_decode(file_get_contents($configFile), true);
+
+        $newConfig = [];
+
+        $blacklist = [
+            "repositories",
+            "require-dev",
+            "scripts",
+            "extra",
+        ];
+
+        foreach ($config as $key => $value) {
+            $ommit = false;
+
+            foreach ($blacklist as $item) {
+                if ($key === $item) {
+                    $ommit = true;
+                }
+            }
+            if (!$ommit) {
+                $newConfig[$key] = $value;
+            }
+        }
+
+        file_put_contents($destinationFile, json_encode($newConfig, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    })
+
+    ->getApplication()
     ->setDefaultCommand('help', false)
     ->run();
-

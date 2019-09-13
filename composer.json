@@ -1,7 +1,7 @@
 {
     "name": "metano/command-utility-for-composer",
     "type": "project",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "license": "GNU",
     "bin": ["utility"],
     "authors": [
