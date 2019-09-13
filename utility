@@ -1,34 +1,8 @@
 #!/usr/bin/env php
 <?php
 
-checkVendors();
-
-function checkVendors()
-{
-    if (!file_exists(__DIR__.'/vendor'))
-    {
-        try {
-            echo "Trying to install all components...\n";
-            $cmd = "composer install";
-            exec(sprintf('%s  2>&1', $cmd), $result, $returnVar);
-
-            if ($returnVar !== 0) {
-                if (stripos($result[0], 'command not found') !== false) {
-                    echo "\n";
-                    echo "Composer not found, you should install it.";
-                    die;
-
-                }
-                echo "I cannot run composer, maybe you run '$cmd', by yourself?";
-                die;
-            }
-
-            echo "...components are installed succesfully.\n";
-            echo "\n";
-        } catch (Exception $exception) {
-            echo sprintf('Caught exception: %s', $exception->getMessage());
-        }
-    }
+if (is_file($autoload = getcwd() . '/vendor/autoload.php')) {
+    require $autoload;
 }
 
 use Symfony\Component\Console\Application;
@@ -36,17 +10,15 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-require __DIR__.'/vendor/autoload.php';
-
 $config = json_decode(file_get_contents(__DIR__ . '/composer.json'));
 
-(new Application('echo', $config->version))
+(new Application('utility', $config->version))
     ->register('help')
     ->setDescription('Just help')
     ->setCode(function (InputInterface $input,  OutputInterface $output) {
         $config = json_decode(file_get_contents(__DIR__ . '/composer.json'));
 
-        $output->writeln(sprintf("Hello in %s, version: %s", $config->name, $config->version));
+        $output->writeln(sprintf("Utility in %s, version: %s", $config->name, $config->version));
     })
 
     ->getApplication()
@@ -55,13 +27,14 @@ $config = json_decode(file_get_contents(__DIR__ . '/composer.json'));
     ->setDescription('Add bundles')
     ->addArgument('bundles', InputArgument::IS_ARRAY | InputArgument::REQUIRED)
     ->setCode(function (InputInterface $input, OutputInterface $output) {
-        $dir = '..';
+        $dir = getcwd();
+        $configFile = $dir . '/composer.json';
 
         $singleLineArguments = implode(" ", $input->getArgument('bundles'));
 
         exec("cd $dir && composer req --dev $singleLineArguments --no-scripts");
 
-        $config = json_decode(file_get_contents(__DIR__. "/$dir/composer.json"));
+        $config = json_decode(file_get_contents($configFile));
 
         $packages = $config->extra->mozart->packages;
 
@@ -74,7 +47,7 @@ $config = json_decode(file_get_contents(__DIR__ . '/composer.json'));
 
         $config->extra->mozart->packages = array_values($packages);
 
-        file_put_contents(__DIR__. "/$dir/composer.json", json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
         exec("cd $dir && composer run-script post-install-cmd");
     })
@@ -85,13 +58,14 @@ $config = json_decode(file_get_contents(__DIR__ . '/composer.json'));
     ->setDescription('Remove bundles')
     ->addArgument('bundles', InputArgument::IS_ARRAY | InputArgument::REQUIRED)
     ->setCode(function (InputInterface $input, OutputInterface $output) {
-        $dir = '..';
+        $dir = getcwd();
+        $configFile = $dir . '/composer.json';
 
         $singleLineArguments = implode(" ", $input->getArgument('bundles'));
 
         exec("cd $dir && composer remove --dev $singleLineArguments --no-scripts");
 
-        $config = json_decode(file_get_contents(__DIR__. "/$dir/composer.json"));
+        $config = json_decode(file_get_contents($configFile));
 
         $packages = $config->extra->mozart->packages;
 
@@ -109,7 +83,7 @@ $config = json_decode(file_get_contents(__DIR__ . '/composer.json'));
 
         $config->extra->mozart->packages = array_values($packages);
 
-        file_put_contents(__DIR__. "/$dir/composer.json", json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
         exec("cd $dir && composer run-script post-install-cmd");
     })
@@ -120,9 +94,11 @@ $config = json_decode(file_get_contents(__DIR__ . '/composer.json'));
     ->addArgument('prefix', InputArgument::REQUIRED)
     ->setCode(function (InputInterface $input, OutputInterface $output) {
         $prefix = $input->getArgument('prefix');
-        $dir = '..';
 
-        $config = json_decode(file_get_contents(__DIR__. "/$dir/composer.json"));
+        $dir = getcwd();
+        $configFile = $dir . '/composer.json';
+
+        $config = json_decode(file_get_contents($configFile));
 
         // change main plugin prefix
         $psr4 = 'psr-4';
@@ -142,7 +118,7 @@ $config = json_decode(file_get_contents(__DIR__ . '/composer.json'));
 
         $config->extra->mozart->dep_namespace = implode("\\", $arr);
 
-        file_put_contents(__DIR__. "/$dir/composer.json", json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
         exec("cd $dir && composer run-script post-install-cmd");
     })
